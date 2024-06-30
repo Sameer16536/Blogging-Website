@@ -4,13 +4,13 @@ import Quote from '../components/Quote'
 
 const SignUp = () => {
   return (
-    <div className='grid grid-cols-2'>
+    <div className='grid grid-cols-1 lg:grid-cols-2'>
       
-      <div>
-        <Auth />
+      <div className=''>
+        <Auth type='Sign Up'/>
       </div>
 
-      <div className='invisible lg:visible'>
+      <div className='hidden lg:block'>
         <Quote />
       </div>
 
@@ -18,5 +18,8 @@ const SignUp = () => {
 
   )
 }
+
+
+
 
 export default SignUp
