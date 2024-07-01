@@ -11,7 +11,7 @@ const BlogCard = ({ authorName, title, content, publishedDate }: BlogCardProps) 
         <div className="border-b border-slate-200 p-4 pb-4">
             <div className="flex">
                 <div className="flex justify-center flex-col">
-                    <Avatar name={authorName} />
+                    <Avatar name={authorName}  size={6}/>
                 </div>
                 <div className="font-extralight pl-2">
                     {authorName}
@@ -45,10 +45,10 @@ const Circle = () => {
     )
 }
 
-const Avatar = ({ name }: { name: string }) => {
+export const Avatar = ({ name,size=4 }: { name: string,size?:number }) => {
     return (
         <div>
-            <div className="relative inline-flex items-center justify-center w-6 h-6 overflow-hidden bg-gray-100 rounded-full dark:bg-gray-600">
+            <div className={`relative inline-flex items-center justify-center w-${size} h-${size} overflow-hidden bg-gray-100 rounded-full dark:bg-gray-600`}>
                 <span className="font-medium text-gray-600 dark:text-gray-300">{name[0]}</span>
             </div>
         </div>
