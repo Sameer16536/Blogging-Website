@@ -4,21 +4,49 @@ import './App.css'
 import SignUp from './pages/SignUp'
 import SignIn from './pages/SignIn'
 import Blog from './pages/Blog'
-import Blogs from './pages/Blogs'
+
+import AllBlogs from './pages/AllBlogs'
+import LandingPage from './pages/LandingPage'
+import PublishBlog from './PublishBlog'
+
+
+const router = [
+  {
+    path: "/",
+    element: <LandingPage />
+  },
+  {
+    path: "/signin",
+    element: <SignIn />
+  },
+  {
+    path: "/signup",
+    element: <SignUp />
+  },
+  {
+    path: "/blog/:id",
+    element: <Blog />
+  },
+  {
+    path: "/blogs",
+    element: <AllBlogs />
+  },
+  {
+    path: "/publish",
+    element: <PublishBlog />
+  }
+]
 
 function App() {
-  
+
   return (
     <>
       <BrowserRouter>
-      <Routes>
-        <Route path='/signup' element={<SignUp/>}/>
-        <Route path='/signin' element={<SignIn/>}/>
-        <Route path='/blog/:id' element={<Blog/>}/>
-        <Route path='/blog/bulk' element={<Blogs/>}/>
-   
-      </Routes>
-      
+        <Routes>
+          {router.map((route, idx) => (
+            <Route path={route.path} key={idx} element={route.element} />
+          ))}
+        </Routes>
       </BrowserRouter>
     </>
   )

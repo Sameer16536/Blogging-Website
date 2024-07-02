@@ -5,7 +5,7 @@ import { sign, verify } from 'hono/jwt'
 import type { JWTPayload as HonoJWTPayload } from 'hono/utils/jwt/types'
 
 interface CustomJWTPayload extends HonoJWTPayload {
-  id: string
+    id: string
 }
 
 
@@ -37,7 +37,7 @@ blogRouter.use("/*", async (c, next) => {
         await next()
     } catch (error) {
         c.status(401)
-        return c.json({ error: "unauthorized - error verifying token"})
+        return c.json({ error: "unauthorized - error verifying token" })
     }
 })
 
@@ -59,7 +59,7 @@ blogRouter.post('/', async (c) => {
         return c.json({ id: post.id })
     } catch (error) {
         c.status(500)
-        return c.json({ error: "error creating post"})
+        return c.json({ error: "error creating post" })
     }
 })
 
@@ -80,7 +80,7 @@ blogRouter.put('/', async (c) => {
         return c.json({ id: post.id })
     } catch (error) {
         c.status(500)
-        return c.json({ error: "error updating post"})
+        return c.json({ error: "error updating post" })
     }
 })
 
@@ -92,13 +92,13 @@ blogRouter.get('/bulk', async (c) => {
     }).$extends(withAccelerate())
     try {
         const allPosts = await prisma.post.findMany({
-            select:{
+            select: {
                 id: true,
                 title: true,
-                content:true,
-                author:{
-                    select:{
-                        name:true
+                content: true,
+                author: {
+                    select: {
+                        name: true
                     }
                 }
             }
@@ -118,7 +118,18 @@ blogRouter.get('/:id', async (c) => {
     }).$extends(withAccelerate())
     const postId = c.req.param('id')
     try {
-        const post = await prisma.post.findUnique({ where: { id: postId } })
+        const post = await prisma.post.findUnique({
+            where: { id: postId }, select: {
+                id: true,
+                title: true,
+                content: true,
+                author: {
+                    select: {
+                        name: true
+                    }
+                }
+            }
+        })
         if (!post) {
             c.status(404)
             return c.json({ error: "post not found" })
@@ -126,7 +137,7 @@ blogRouter.get('/:id', async (c) => {
         return c.json({ post: post })
     } catch (error) {
         c.status(500)
-        return c.json({ error: "error fetching post"})
+        return c.json({ error: "error fetching post" })
     }
 })
 
