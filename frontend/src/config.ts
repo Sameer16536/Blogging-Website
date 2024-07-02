@@ -1,0 +1,1 @@
+export const BACKEND_URL ="https://backend.sameermarathe15.workers.dev"

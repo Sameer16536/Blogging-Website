@@ -1,14 +1,17 @@
+import { Link } from "react-router-dom"
 
 interface BlogCardProps {
     authorName: string,
     title: string,
     content: string,
-    publishedDate: string
+    publishedDate: string,
+    id:number
 }
 
-const BlogCard = ({ authorName, title, content, publishedDate }: BlogCardProps) => {
+const BlogCard = ({ authorName, title, content, publishedDate,id }: BlogCardProps) => {
     return (
-        <div className="border-b border-slate-200 p-4 pb-4">
+        <Link to={`/blog/${id}`}>
+            <div className="border-b border-slate-200 p-4 pb-4 w-screen max-w-screen-md cursor-pointer">
             <div className="flex">
                 <div className="flex justify-center flex-col">
                     <Avatar name={authorName}  size={6}/>
@@ -34,6 +37,7 @@ const BlogCard = ({ authorName, title, content, publishedDate }: BlogCardProps) 
             </div>
           
         </div>
+        </Link>
     )
 }
 

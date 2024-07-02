@@ -1,26 +1,24 @@
 import Appbar from "../components/Appbar"
 import BlogCard from "../components/BlogCard"
+import { useBlogs } from "../hooks"
 
 
 const Blogs = () => {
+    const {loading,blogs} = useBlogs()
+    if(loading){
+        return <div>
+            Loading......
+        </div>
+    }
     return (
         <div>
             <Appbar />
         <div className="flex justify-center">
             
-            <div className="max-w-xl">
-                <BlogCard authorName={"Madara"} publishedDate={"30 June 2024"} content={`Lorem ipsum dolor sit amet consectetur adipisicing elit. Numquam, quam. Quo libero quis esse debitis eum! 
-            Voluptate perferendis velit, similique accusamus quos dignissimos illum non`} title={"Lorem ipsum dolor sit amet consectetur adipisicing elit. Numquam, quam. Quo libero quis esse debitis eum!"} />
-            
-            <BlogCard authorName={"Madara"} publishedDate={"30 June 2024"} content={`Lorem ipsum dolor sit amet consectetur adipisicing elit. Numquam, quam. Quo libero quis esse debitis eum! 
-            Voluptate perferendis velit, similique accusamus quos dignissimos illum non`} title={"Lorem ipsum dolor sit amet consectetur adipisicing elit. Numquam, quam. Quo libero quis esse debitis eum!"} />
-            <BlogCard authorName={"Madara"} publishedDate={"30 June 2024"} content={`Lorem ipsum dolor sit amet consectetur adipisicing elit. Numquam, quam. Quo libero quis esse debitis eum! 
-            Voluptate perferendis velit, similique accusamus quos dignissimos illum non`} title={"Lorem ipsum dolor sit amet consectetur adipisicing elit. Numquam, quam. Quo libero quis esse debitis eum!"} />
-            <BlogCard authorName={"Madara"} publishedDate={"30 June 2024"} content={`Lorem ipsum dolor sit amet consectetur adipisicing elit. Numquam, quam. Quo libero quis esse debitis eum! 
-            Voluptate perferendis velit, similique accusamus quos dignissimos illum non`} title={"Lorem ipsum dolor sit amet consectetur adipisicing elit. Numquam, quam. Quo libero quis esse debitis eum!"} />
-            
-            
-            </div>
+            <div className="">
+                {blogs.map((blog) => ( <BlogCard id={blog.id} authorName={blog.author.name || "Anonymous"} publishedDate={"1 July 2024"} content={blog.content} title={blog.title} 
+            />))}
+                 </div>
         </div>
         </div>
             )
