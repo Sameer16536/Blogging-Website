@@ -1,13 +1,10 @@
-import { Hono } from 'hono'
+import { Hono } from "hono";
+import { cors } from "hono/cors";
 import { PrismaClient } from '@prisma/client/edge'
 import { withAccelerate } from '@prisma/extension-accelerate'
-import { sign, verify } from 'hono/jwt'
-import type { JWTPayload as HonoJWTPayload } from 'hono/utils/jwt/types'
 
-interface CustomJWTPayload extends HonoJWTPayload {
-    id: string
-}
-
+import { UpdatePost,createPost } from "@sameer11/blog-commons"
+import { verify } from "hono/jwt";
 
 export const blogRouter = new Hono<{
     Bindings: {
@@ -17,129 +14,180 @@ export const blogRouter = new Hono<{
     Variables: {
         userId: string
     }
-}>()
+}>();
 
-// Middleware
-blogRouter.use("/*", async (c, next) => {
-    const header = c.req.header("Authorization") || ""
-    if (!header) {
-        c.status(401)
-        return c.json({ error: "unauthorized - no header" })
-    }
-    const token = header.split(' ')[1]
+blogRouter.use("*", async (c, next) => {
     try {
-        const payload = await verify(token, c.env.JWT_SECRET) as CustomJWTPayload
-        if (!payload || !payload.id) {
-            c.status(401)
-            return c.json({ error: "unauthorized - invalid token" })
+
+        const header = c.req.header("Authorization");
+
+        if (!header) return c.json({ error: "Unauthorized" }, 401)
+
+        const token = header.split(" ")[1]
+
+        const payload = await verify(token, c.env.JWT_SECRET);
+        console.log(payload)
+        if (!payload) {
+            return c.json({ 
+                error: "Unauthorized"
+            }, 403)
         }
-        c.set('userId', payload.id)
-        await next()
-    } catch (error) {
-        c.status(401)
-        return c.json({ error: "unauthorized - error verifying token" })
+        c.set("userId", payload.id);
+        await next();
+    } catch (e) {
+        return c.json({
+            err: "Invalid Request"
+        }, 400)
     }
 })
 
-// Create post
-blogRouter.post('/', async (c) => {
+blogRouter.post("/", async (c) => {
     const prisma = new PrismaClient({
         datasourceUrl: c.env.DATABASE_URL,
-    }).$extends(withAccelerate())
-    const body = await c.req.json()
-    const authorId = c.get('userId')
+    }).$extends(withAccelerate());
+
+    const userId = Number(c.get("userId"));
+
+    const body = await c.req.json();
+    const { success } = createPost.safeParse(body);
+
+    if (!success) {
+        return c.json({
+            error: "Inputs not Correct"
+        }, 400)
+    }
+
     try {
         const post = await prisma.post.create({
             data: {
                 title: body.title,
                 content: body.content,
-                authorId: authorId
+                authorId: userId
             }
         })
-        return c.json({ id: post.id })
-    } catch (error) {
-        c.status(500)
-        return c.json({ error: "error creating post" })
-    }
-})
 
-// Update post
-blogRouter.put('/', async (c) => {
+
+        return c.json({
+            success: "Post Created",
+            id: post.id
+        });
+
+    } catch (e) {
+        console.log(e)
+        return c.json({
+            err: "Something Went Wrong",
+            e
+        }, 400)
+    }
+
+});
+
+blogRouter.put("/update", async (c) => {
     const prisma = new PrismaClient({
         datasourceUrl: c.env.DATABASE_URL,
-    }).$extends(withAccelerate())
-    const body = await c.req.json()
+    }).$extends(withAccelerate());
+
+    const userId = Number(c.get("userId"));
+
+    const body = await c.req.json();
+
+    const { success } = UpdatePost.safeParse(body);
+
+    if (!success) {
+        return c.json({
+            error: "Inputs not Correct"
+        }, 400)
+    }
+
     try {
         const post = await prisma.post.update({
-            where: { id: body.id },
+            where: {
+                id: body.id,
+                authorId: userId,
+            },
             data: {
                 title: body.title,
                 content: body.content,
             }
         })
-        return c.json({ id: post.id })
+
+        return c.json({
+            success: "Post Updated",
+            post
+        });
     } catch (error) {
-        c.status(500)
-        return c.json({ error: "error updating post" })
+        return c.json({
+            error: "Something went wrong"
+        })
     }
+
+
 })
 
-
-// Get all posts
-blogRouter.get('/bulk', async (c) => {
+blogRouter.get("/bulk", async (c) => {
     const prisma = new PrismaClient({
         datasourceUrl: c.env.DATABASE_URL,
-    }).$extends(withAccelerate())
+    }).$extends(withAccelerate());
+
     try {
         const allPosts = await prisma.post.findMany({
+            take: 10,
             select: {
-                id: true,
                 title: true,
                 content: true,
+                id: true,
                 author: {
                     select: {
                         name: true
                     }
                 }
             }
+        });
+
+        return c.json({
+            allPosts
         })
-        return c.json({ posts: allPosts })
+
     } catch (error) {
-        c.status(500)
-        return c.json({ error: "error fetching posts" })
+        return c.json({
+            error: "Something went wrong"
+        }, 400)
     }
 })
 
-
-// Get post by ID
-blogRouter.get('/:id', async (c) => {
+blogRouter.get("/:id", async (c) => {
     const prisma = new PrismaClient({
         datasourceUrl: c.env.DATABASE_URL,
-    }).$extends(withAccelerate())
-    const postId = c.req.param('id')
+    }).$extends(withAccelerate());
+
+    const id = Number(c.req.param("id"));
+    console.log(id)
+
     try {
         const post = await prisma.post.findUnique({
-            where: { id: postId }, select: {
-                id: true,
+            where: {
+                id
+            },
+            select: {
                 title: true,
                 content: true,
+                id: true,
                 author: {
                     select: {
                         name: true
                     }
                 }
             }
+        });
+
+        return c.json({
+            post
         })
-        if (!post) {
-            c.status(404)
-            return c.json({ error: "post not found" })
-        }
-        return c.json({ post: post })
+
     } catch (error) {
-        c.status(500)
-        return c.json({ error: "error fetching post" })
+        return c.json({
+            error: "Something went wrong"
+        }, 400)
     }
+
 })
-
-
-export default blogRouter

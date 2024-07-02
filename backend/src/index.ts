@@ -15,7 +15,7 @@ const app = new Hono<{
     userId:string
   }
 }>()
-app.use('/api/v1/*',cors())
+app.use('*', cors());
 app.route('/api/v1/blog',blogRouter)
 app.route('/api/v1/user',userRouter)
 

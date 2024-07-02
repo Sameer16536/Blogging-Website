@@ -1,86 +1,92 @@
-
-import { Hono } from 'hono'
 import { PrismaClient } from '@prisma/client/edge'
 import { withAccelerate } from '@prisma/extension-accelerate'
-import { decode, jwt, sign, verify } from 'hono/jwt'
+
+import { sign } from 'hono/jwt'
+import { Hono } from 'hono'
 import { SignUpInput,SigninInput } from '@sameer11/blog-commons'
+
 export const userRouter = new Hono<{
     Bindings: {
-      DATABASE_URL: string,
-      JWT_SECRET: string
-    },
-    Variables:{
-      userId:string
+        DATABASE_URL: string,
+        JWT_SECRET: string
     }
-  }>()
+}>();
 
-//SignUp
-userRouter.post('/signup', async (c) => {
+userRouter.post("/signup", async (c) => {
     const prisma = new PrismaClient({
-      datasourceUrl: c.env.DATABASE_URL,
-    }).$extends(withAccelerate())
-  
-    const body = await c.req.json()
-    const {success} = SignUpInput.safeParse(body)
+        datasourceUrl: c.env.DATABASE_URL,
+    }).$extends(withAccelerate());
+
+    const body = await c.req.json();
+    const { success } = SignUpInput.safeParse(body);
+
     if(!success){
-      return c.json({error:"Invalid Input"},400)
+        return c.json({
+            error: "Inputs not Correct"
+        }, 400)
     }
     try {
-      //Check if user exists:
-      const ExistingUser = await prisma.user.findUnique({
-        where: {
-          email: body.email
-        }
-      })
-      if (ExistingUser) {
-        return c.json({ error: 'User already exists' })
-      }
-  
-      //Else create a new user
-      const user = await prisma.user.create({
-        data: {
-          email: body.email,
-          password: body.password,
-          name: body.name,
-  
-        }
-      })
-      const jwt = await sign({ id: user.id }, c.env.JWT_SECRET)
-      return c.json({ jwt })
+        // TODO: HASH PASSWORD BEFORE STORING IN THE DATABASE
+
+        const user = await prisma.user.create({
+            data: {
+                name: body.name,
+                email: body.email,
+                password: body.password
+            }
+        })
+
+        const token = await sign({ id: user.id }, c.env.JWT_SECRET);
+
+        return c.json({
+            message: "User Created Successfully",
+            token
+        }, 200);
+
     } catch (error) {
-      c.status(403);
-      return c.json({ error: "error while signing up" });
+        return c.json({
+            message: "Something Went Wrong! Please try again Later"
+        }, 400)
     }
-  })
-  
-  
-  
-  //Sign In 
-  userRouter.post('/signin', async(c) => {
+})
+
+userRouter.post("/signin", async (c) => {
     const prisma = new PrismaClient({
-      datasourceUrl: c.env.DATABASE_URL,
-    }).$extends(withAccelerate())
-  
-    const body = await c.req.json()
-    const {success} = SigninInput.safeParse(body)
+        datasourceUrl: c.env.DATABASE_URL,
+    }).$extends(withAccelerate());
+
+    const body = await c.req.json();
+    const { success } = SigninInput.safeParse(body);
+
     if(!success){
-      return c.json({error:"Invalid Input"},400)
+        return c.json({
+            error: "Inputs not Correct"
+        }, 400)
     }
 
     try {
-      const ExistingUser = await prisma.user.findUnique({
-        where:{
-          email : body.email,
-          password:body.password
-        }
-      })
-      if (!ExistingUser) {
-        return c.json({ error: 'User does not exist' })
-      }
-      const jwt = await sign({ id: ExistingUser.id }, c.env.JWT_SECRET);
-      return c.json({ jwt });
+        const user = await prisma.user.findUnique({
+            where: {
+                email: body.email,
+                password: body.password
+            }
+        });
+
+        if (!user) return c.json({
+            error: "Unauthorized"
+        }, 403);
+
+        // TODO: PASSWORD AND TOKEN VERIFICATION
+
+        const token = await sign({ id: user.id }, c.env.JWT_SECRET);
+
+        return c.json({
+            token
+        })
+
     } catch (error) {
-      c.status(403);
-      return c.json({ error: "error while signing in" });
+        return c.json({
+            message: "Something Went Wrong! Please try again Later"
+        }, 400)
     }
-  })
+})
