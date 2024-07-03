@@ -3,7 +3,7 @@ import { cors } from "hono/cors";
 import { PrismaClient } from '@prisma/client/edge'
 import { withAccelerate } from '@prisma/extension-accelerate'
 
-import { UpdatePost,createPost } from "@sameer11/blog-commons"
+import { UpdatePost, createPost } from "@sameer11/blog-commons"
 import { verify } from "hono/jwt";
 
 export const blogRouter = new Hono<{
@@ -18,7 +18,6 @@ export const blogRouter = new Hono<{
 
 blogRouter.use("*", async (c, next) => {
     try {
-
         const header = c.req.header("Authorization");
 
         if (!header) return c.json({ error: "Unauthorized" }, 401)
@@ -32,7 +31,8 @@ blogRouter.use("*", async (c, next) => {
                 error: "Unauthorized"
             }, 403)
         }
-        c.set("userId", payload.id);
+        // Casting payload.id to a string
+        c.set("userId", String(payload.id));
         await next();
     } catch (e) {
         return c.json({
@@ -65,7 +65,6 @@ blogRouter.post("/", async (c) => {
                 authorId: userId
             }
         })
-
 
         return c.json({
             success: "Post Created",
@@ -120,7 +119,6 @@ blogRouter.put("/update", async (c) => {
             error: "Something went wrong"
         })
     }
-
 
 })
 

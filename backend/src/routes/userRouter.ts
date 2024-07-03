@@ -3,7 +3,7 @@ import { withAccelerate } from '@prisma/extension-accelerate'
 
 import { sign } from 'hono/jwt'
 import { Hono } from 'hono'
-import { SignUpInput,SigninInput } from '@sameer11/blog-commons'
+import { SignUpInput, SigninInput } from '@sameer11/blog-commons'
 
 export const userRouter = new Hono<{
     Bindings: {
@@ -18,13 +18,15 @@ userRouter.post("/signup", async (c) => {
     }).$extends(withAccelerate());
 
     const body = await c.req.json();
-    const { success } = SignUpInput.safeParse(body);
+    const { success, error } = SignUpInput.safeParse(body);
 
-    if(!success){
+    if (!success) {
+        console.log(error);
         return c.json({
             error: "Inputs not Correct"
-        }, 400)
+        }, 400);
     }
+
     try {
         // TODO: HASH PASSWORD BEFORE STORING IN THE DATABASE
 
@@ -44,9 +46,10 @@ userRouter.post("/signup", async (c) => {
         }, 200);
 
     } catch (error) {
+        console.log(error); // Log the actual error
         return c.json({
             message: "Something Went Wrong! Please try again Later"
-        }, 400)
+        }, 400);
     }
 })
 
@@ -56,12 +59,13 @@ userRouter.post("/signin", async (c) => {
     }).$extends(withAccelerate());
 
     const body = await c.req.json();
-    const { success } = SigninInput.safeParse(body);
+    const { success, error } = SigninInput.safeParse(body);
 
-    if(!success){
+    if (!success) {
+        console.log(error);
         return c.json({
             error: "Inputs not Correct"
-        }, 400)
+        }, 400);
     }
 
     try {
@@ -72,9 +76,11 @@ userRouter.post("/signin", async (c) => {
             }
         });
 
-        if (!user) return c.json({
-            error: "Unauthorized"
-        }, 403);
+        if (!user) {
+            return c.json({
+                error: "Unauthorized"
+            }, 403);
+        }
 
         // TODO: PASSWORD AND TOKEN VERIFICATION
 
@@ -85,8 +91,9 @@ userRouter.post("/signin", async (c) => {
         })
 
     } catch (error) {
+        console.log(error); // Log the actual error
         return c.json({
             message: "Something Went Wrong! Please try again Later"
-        }, 400)
+        }, 400);
     }
 })
