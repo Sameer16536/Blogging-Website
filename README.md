@@ -4,3 +4,7 @@
 ```bash
 npm install @sameer11/blog-commons
 ```
+### Remaining Errors:
+- Error due to change of database
+- Login Issue
+
